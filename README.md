@@ -1,0 +1,1 @@
+# frappe-suite-image
