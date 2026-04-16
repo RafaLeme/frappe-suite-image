@@ -1,17 +1,19 @@
 # syntax=docker/dockerfile:1.7
 
 ARG FRAPPE_BRANCH=version-16
-ARG FRAPPE_PATH=https://github.com/frappe/frappe
-
 FROM frappe/build:${FRAPPE_BRANCH} AS builder
 
-ARG FRAPPE_BRANCH
-ARG FRAPPE_PATH
+ARG FRAPPE_BRANCH=version-16
+ARG FRAPPE_PATH=https://github.com/frappe/frappe
 
 USER frappe
 
-RUN --mount=type=secret,id=apps_json,dst=/tmp/apps.json \
-    bench init --apps_path=/tmp/apps.json \
+RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1000 \
+    export APP_INSTALL_ARGS="" && \
+    if [ -f /opt/frappe/apps.json ] && [ -s /opt/frappe/apps.json ]; then \
+      export APP_INSTALL_ARGS="--apps_path=/opt/frappe/apps.json"; \
+    fi && \
+    bench init ${APP_INSTALL_ARGS} \
       --frappe-branch=${FRAPPE_BRANCH} \
       --frappe-path=${FRAPPE_PATH} \
       --no-procfile \
@@ -23,7 +25,7 @@ RUN --mount=type=secret,id=apps_json,dst=/tmp/apps.json \
     echo "{}" > sites/common_site_config.json && \
     find apps -mindepth 1 -path "*/.git" | xargs rm -fr
 
-FROM frappe/base:${FRAPPE_BRANCH}
+FROM frappe/base:${FRAPPE_BRANCH} AS backend
 
 LABEL org.opencontainers.image.source="https://github.com/RafaLeme/frappe-suite-image"
 
