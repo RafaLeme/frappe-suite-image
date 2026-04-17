@@ -25,7 +25,7 @@ RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1
     echo "{}" > sites/common_site_config.json && \
     find apps -mindepth 1 -path "*/.git" | xargs rm -fr
 
-FROM frappe/base:${FRAPPE_BRANCH} AS backend
+FROM frappe/base:${FRAPPE_BRANCH}
 
 LABEL org.opencontainers.image.source="https://github.com/RafaLeme/frappe-suite-image"
 
@@ -34,6 +34,6 @@ COPY --from=builder --chown=frappe:frappe /home/frappe/frappe-bench /home/frappe
 
 WORKDIR /home/frappe/frappe-bench
 
-VOLUME ["/home/frappe/frappe-bench/sites", "/home/frappe/frappe-bench/sites/assets", "/home/frappe/frappe-bench/logs"]
+VOLUME ["/home/frappe/frappe-bench/sites", "/home/frappe/frappe-bench/logs"]
 
 CMD ["/home/frappe/frappe-bench/env/bin/gunicorn", "--chdir=/home/frappe/frappe-bench/sites", "--bind=0.0.0.0:8000", "--threads=4", "--workers=2", "--worker-class=gthread", "--worker-tmp-dir=/dev/shm", "--timeout=120", "--preload", "frappe.app:application"]
